@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
 <meta name="robots" content="noindex,nofollow">
-<meta name="description" content="For BS Physics students">
+<meta name="description" content="Bs physics">
 <link rel="canonical" href="https://awaisuddin633-del.github.io/bs-physics/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="BS PHYSICS">
-<meta property="og:description" content="For BS Physics students">
+<meta property="og:title" content="BS Physics">
+<meta property="og:description" content="Bs physics">
 <meta property="og:url" content="https://awaisuddin633-del.github.io/bs-physics/">
 <meta name="twitter:card" content="summary">
 <meta name="google-site-verification" content="Bs physics">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>BS PHYSICS</title>
+<title>BS Physics</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&family=Noto+Nastaliq+Urdu:wght@400;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
 <style>
 :root{--bg:#EEF3F6;--bar:#EEF3F6;--card:#fff;--ink:#16263A;--mute:#586A7D;--line:#D0DCE5;--acc:#0B6E8A;--on:#fff;--hi:#E9A913;--grid:rgba(22,38,58,.06);
@@ -93,7 +93,7 @@ const ORD=['','1st','2nd','3rd','4th','5th','6th','7th','8th'];
 const esc=s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const credit=c=>{const m=c.cr.match(/(\d)-(\d)/);return m?(+m[1]+ +m[2])+' credit hours ('+c.cr.slice(1,-1)+')':c.cr};
 const LN=()=>lang==='ur'?'Language: Urdu written in Urdu script, natural educational Urdu as used in Pakistani universities, headings also in Urdu; put the English technical term in brackets at its first use; keep all formulas and symbols in standard mathematical notation (MathML); labels inside SVG figures stay in English.':lang==='ro'?'Language: Roman Urdu (Urdu written in English letters) for all explanations; keep technical terms, symbols and formulas in English.':'Language: clear, simple English.';
-const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const mem={},ls={get(k){try{const v=localStorage.getItem(k);if(v!==null)return v}catch(e){}return k in mem?mem[k]:null},set(k,v){mem[k]=v;try{localStorage.setItem(k,v)}catch(e){}}},STORE_OK=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return true}catch(e){return false}})();
 let nav=[{v:'home'}],lang=['ur','ro'].includes(ls.get('lang'))?ls.get('lang'):'en',ac=null,SM;
 const app=document.getElementById('app');
 const go=o=>{nav.push(o);draw();scrollTo(0,0)};
@@ -107,7 +107,7 @@ function vHome(){
   return `<h1>BS Physics</h1><p class="lead">University of Balochistan, Fall 2026 syllabus: ${SEMS.length} semesters, ${ALL.length} subjects, ${tp} topics. Choose a semester, then a subject, then a topic.</p>
   <input id="q" type="search" placeholder="Search any topic, for example Lagrangian" aria-label="Search topics"><div id="res"></div>
   ${hub()}<div class="tiles">${SEMS.map(s=>`<button class="tile" data-a="sem" data-n="${s.n}"><span class="num">${s.n}</span><span class="lab">${ORD[s.n]} semester</span><span class="sub">${s.courses.length} subjects</span></button>`).join('')}</div>
-  <p class="foot">Topics come straight from your university syllabus. Explanations and 3D animations are written by the AI model you choose in Settings when you open a point, so check formulas against your textbook before an exam.</p>`}
+  <p class="foot">Topics come straight from your university syllabus. Explanations and 3D animations are written by the AI model you choose in Settings when you open a point, so check formulas against your textbook before an exam. Build 2.1</p>`}
 function vSem(n){
   const s=SEMS[n-1];let g='',h='';
   s.courses.forEach(c=>{if((c.group||'')!==g){g=c.group||'';if(g)h+=`<h3 class="sec">${esc(g)}</h3>`}h+=courseRow(c)});
@@ -252,7 +252,7 @@ async function quiz(){
 }
 function renderQuiz(qs,s){
   const q=document.getElementById('qz');q.dir=lang==='ur'?'rtl':'ltr';q.innerHTML='<h3 class="sec">Practice quiz</h3>';let score=0,n=0;const tot=document.createElement('p');tot.className='msg';
-  qs.forEach((x,j)=>{const d=document.createElement('div');d.className='qq',h=document.createElement('p'),fb=document.createElement('p');fb.className='msg';h.textContent=(j+1)+'. '+x.q;d.appendChild(h);
+  qs.forEach((x,j)=>{const d=document.createElement('div'),h=document.createElement('p'),fb=document.createElement('p');d.className='qq';fb.className='msg';h.textContent=(j+1)+'. '+x.q;d.appendChild(h);
     x.o.forEach((o,k)=>{const b=document.createElement('button');b.className='row';b.textContent=o;b.onclick=()=>{if(d.dataset.d)return;d.dataset.d=1;n++;if(k===x.a)score++;b.style.borderColor=k===x.a?'var(--acc)':'var(--hi)';fb.textContent=(k===x.a?'Correct. ':'Not quite. Answer: '+x.o[x.a]+'. ')+(x.e||'');
       if(n===qs.length){const key='quiz:'+uk(s),best=Math.max(score,+(ls.get(key)||0));ls.set(key,String(best));tot.textContent='Your score: '+score+' out of '+qs.length+'. Best so far: '+best+'.'}};d.appendChild(b)});
     d.appendChild(fb);q.appendChild(d)});q.appendChild(tot)}
@@ -272,6 +272,7 @@ const mg=document.createElement('canvas').getContext('2d');
 const flat=n=>(n.textContent||'').replace(/\s+/g,' ').trim();
 const FN=/^(sin|cos|tan|cot|sec|csc|sinh|cosh|tanh|log|ln|exp|lim|max|min|det|arg|Re|Im|div|curl|grad|mod)$/,OPS=/^[=+−\-×±∓→⇒⇐↔⟶≈≤≥≠<>∝∼≡∈⊂⊆∪∩·÷]$/,BIG=/^[∑∏∫∬∭∮⋃⋂]$/,FENCE=/^[()\[\]{}|‖⟨⟩]$/;
 function mbox(n,sz){
+  if(!n||!n.localName)return{w:0,a:0,d:0,f:()=>{}};
   const k=n.localName,c=i=>mbox(n.children[i],sz),cs=i=>mbox(n.children[i],sz*.7);
   const txt=(s,font,fs,a,d)=>{mg.font=font;return{w:mg.measureText(s).width,a:a==null?fs*.74:a,d:d==null?fs*.24:d,f:(x2,x,y)=>{x2.font=font;x2.direction='ltr';x2.textAlign='left';x2.fillText(s,x,y)}}};
   const row=bs=>{bs=bs.map((b,i)=>b.un&&(i===0||bs[i-1].op||/^[(\[{]$/.test(bs[i-1].s||''))?b.un:b);const sp=new Map(),st=[];bs.forEach((b,i)=>{if(b.fence&&/^[(\[{]$/.test(b.s))st.push(i);else if(b.fence&&/^[)\]}]$/.test(b.s)&&st.length){const o=st.pop(),mid=bs.slice(o+1,i).filter(q=>!q.fence),H=Math.max(0,...mid.map(q=>q.a+q.d)),A=Math.max(0,...mid.map(q=>q.a));if(H>=sz*1.5){sp.set(o,[H,A]);sp.set(i,[H,A])}}});
@@ -382,14 +383,14 @@ function renderFigs(root){root.querySelectorAll('pre.fig').forEach(p=>{let sp,s=
 function renderMath(root){
   if(document.fonts&&!document.fonts.check('400 20px "Literata"'))document.fonts.load('400 20px "Literata"').then(()=>{if(root.isConnected)renderMath(root)}).catch(()=>{});
   const col=getComputedStyle(root).color,dpr=Math.min(window.devicePixelRatio||1,3),avail=Math.max(200,root.clientWidth-44);
-  root.querySelectorAll('math,canvas.mx').forEach(m=>{
+  root.querySelectorAll('math,canvas.mx').forEach(m=>{try{
     const cv0=m.tagName==='CANVAS',src=cv0?m._m:m,disp=cv0?m._d:(src.getAttribute('display')==='block'||!!(m.parentElement&&/^(DIV|SECTION|FIGURE)$/.test(m.parentElement.tagName)));
     const b=mbox(src,disp?23:18),pad=3,h=b.a+b.d+pad*2,sc=disp&&b.w>avail?Math.max(.6,avail/b.w):1,cv=cv0?m:document.createElement('canvas');
     cv.width=Math.ceil(b.w*sc*dpr)+3;cv.height=Math.ceil(h*sc*dpr);cv.style.width=(cv.width/dpr)+'px';
     const x=cv.getContext('2d');x.scale(dpr*sc,dpr*sc);x.fillStyle=x.strokeStyle=col;b.f(x,0,pad+b.a);
     cv._m=src;cv._d=disp;cv.className='mx'+(disp?' mxd':'');cv.setAttribute('role','img');cv.setAttribute('aria-label',flat(src));cv.style.verticalAlign=disp?'middle':(-(b.d+pad)*sc)+'px';
-    if(!cv0)m.replaceWith(cv)})}
-const post=e=>{renderFigs(e);renderMath(e)};
+    if(!cv0)m.replaceWith(cv)}catch(err){if(m.tagName!=='CANVAS'){const sp=document.createElement('span');sp.textContent=flat(m);m.replaceWith(sp)}}})}
+const post=e=>{try{renderFigs(e)}catch(x){}try{renderMath(e)}catch(x){}};
 async function buildPdf(s){
   const c=byId[s.id],t=c.topics[s.i],name=s.p<0?t.t:t.subs[s.p],note=(ls.get('note:'+uk(s))||'').trim(),RTL=lang==='ur',TF=RTL?UF:BF,TH=RTL?UF:HF,LH=RTL?66:40;
   try{await Promise.all([document.fonts.load('700 30px "Schibsted Grotesk"'),document.fonts.load('400 24px "Literata"'),RTL?document.fonts.load('400 26px "Noto Nastaliq Urdu"','اردو'):0])}catch(e){}
@@ -467,7 +468,7 @@ const friendly=(st,m)=>{m=String(m||'').slice(0,200);
   if(st===400&&/api key/i.test(m))return 'This API key is not valid. Copy it again from aistudio.google.com/apikey (Gemini keys start with AIza).';
   if(st===401)return 'The API key was rejected. Copy it again and save.';
   if(st===403)return 'The provider refused this key (403): '+m;
-  if(st===429)return 'The free limit is reached for now. Wait a minute and try again, or try again tomorrow.';
+  if(st===429)return 'The free limit is reached for now'+(m?' ('+m.replace(/\s+/g,' ').slice(0,140)+')':'')+'. Wait a minute and try again. If it says "per day" or "limit: 0", try again tomorrow or use another key.';
   if(st>=500)return 'The AI service is busy right now. Try again in a moment.';
   return st+': '+m};
 async function gModel(key,force){
@@ -477,23 +478,24 @@ async function gModel(key,force){
       const L=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).indexOf('generateContent')>=0).map(m=>m.name.replace('models/','')).filter(n=>/flash/.test(n)&&!/lite|image|tts|live|audio|embed|exp|vision|8b|robotics|computer|thinking/.test(n));
       const st=L.filter(n=>!/preview|latest/.test(n)),pool=st.length?st:L;pool.sort((a,b)=>ver(b)-ver(a)||a.length-b.length);best=pool[0]||null}}catch(e){}
   best=best||'gemini-flash-latest';ls.set('gmodel',best);return best}
+const emit=(o,text)=>{try{o.onText&&o.onText({text})}catch(e){}};
 async function consume(res,G,o){
   let buf='',text='',trunc=false;
   const feed=ln=>{if(ln.indexOf('data:')!==0)return;const d=ln.slice(5).trim();if(!d||d==='[DONE]')return;let j;try{j=JSON.parse(d)}catch(e){return}
     if(G){if(j.promptFeedback&&j.promptFeedback.blockReason)throw new Error('The request was blocked: '+j.promptFeedback.blockReason);const cd=j.candidates&&j.candidates[0];
-      if(cd){const tx=((cd.content&&cd.content.parts)||[]).filter(p=>p.text&&!p.thought).map(p=>p.text).join('');if(tx){text+=tx;o.onText&&o.onText({text})}if(cd.finishReason==='MAX_TOKENS')trunc=true}}
-    else{if(j.type==='content_block_delta'&&j.delta&&j.delta.text){text+=j.delta.text;o.onText&&o.onText({text})}else if(j.type==='message_delta'&&j.delta&&j.delta.stop_reason==='max_tokens')trunc=true;else if(j.type==='error')throw new Error((j.error&&j.error.message)||'Stream error')}};
+      if(cd){const tx=((cd.content&&cd.content.parts)||[]).filter(p=>p.text&&!p.thought).map(p=>p.text).join('');if(tx){text+=tx;emit(o,text)}if(cd.finishReason==='MAX_TOKENS')trunc=true}}
+    else{if(j.type==='content_block_delta'&&j.delta&&j.delta.text){text+=j.delta.text;emit(o,text)}else if(j.type==='message_delta'&&j.delta&&j.delta.stop_reason==='max_tokens')trunc=true;else if(j.type==='error')throw new Error((j.error&&j.error.message)||'Stream error')}};
   if(!res.body){(await res.text()).split('\n').forEach(feed);return{text,truncated:trunc}}
   const rd=res.body.getReader(),dec=new TextDecoder();
   for(;;){const r=await rd.read();if(r.done)break;buf+=dec.decode(r.value,{stream:true});const L=buf.split('\n');buf=L.pop();L.forEach(feed)}
   if(buf)feed(buf);return{text,truncated:trunc}}
 async function llm(prompt,o){o=o||{};const c=CFG();if(!c||!c.key)throw Object.assign(new Error('No API key saved'),{code:'no_key'});
-  const G=c.prov!=='anthropic',key=c.key,mt=o.max||8000;
+  const G=c.prov!=='anthropic',key=c.key,mt=o.max;
   for(let at=0;at<4;at++){
     let url,init;
-    if(G){const m=await gModel(key);url=GB+'/v1beta/models/'+encodeURIComponent(m)+':streamGenerateContent?alt=sse';
-      init={headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:Math.min(mt,16000)}})}}
-    else{url='https://api.anthropic.com/v1/messages';init={headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-5-5',max_tokens:mt,stream:true,messages:[{role:'user',content:prompt}]})}}
+    if(G){const m=await gModel(key),cap=/gemini-(?:2\.5|[3-9])/.test(m)?32768:8192;url=GB+'/v1beta/models/'+encodeURIComponent(m)+':streamGenerateContent?alt=sse';
+      init={headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:mt?Math.min(mt,cap):cap}})}}
+    else{url='https://api.anthropic.com/v1/messages';init={headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-5-5',max_tokens:mt||16000,stream:true,messages:[{role:'user',content:prompt}]})}}
     let res;try{res=await fetch(url,Object.assign({method:'POST',signal:o.signal},init))}
     catch(e){if(e&&e.name==='AbortError')throw e;throw Object.assign(new Error('Could not reach '+(G?'Google':'Anthropic')+'. Check your internet, and open this file in Chrome, not inside another app.'),{code:'network'})}
     if(res.ok)return consume(res,G,o);
@@ -508,12 +510,12 @@ function vSet(){const c=CFG()||{prov:'gemini',key:''};
   <label class="fld">API key<input id="k_key" type="password" value="${esc(c.key)}" placeholder="AIza…" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
   <label class="msg"><input type="checkbox" id="showk"> Show key</label>
   <div class="ctl"><button class="go" data-a="savekey">Save and test</button></div>
-  <p class="msg" id="setmsg">Free Gemini key: aistudio.google.com/apikey</p>`}
+  ${STORE_OK?'':'<p class="msg">Warning: this browser view blocks saved storage, so your key and notes are lost when you close the page. Open the app from your https link (for example GitHub Pages) in Chrome.</p>'}<p class="msg" id="setmsg">Free Gemini key: aistudio.google.com/apikey</p>`}
 const setMsg=m=>{const e=document.getElementById('setmsg');if(e)e.textContent=m};
 async function saveCfg(){const key=document.getElementById('k_key').value.replace(/[\s"'`]/g,''),prov=document.getElementById('prov').value;
   if(!key){setMsg('Paste your API key first.');return}
   ls.set('cfg',JSON.stringify({prov,key}));ls.set('gmodel','');SM=null;setMsg('Saved. Testing the connection…');
-  try{const r=await llm('Reply with the single word OK.',{max:400});setMsg('Connected'+(prov==='gemini'?' (model '+ls.get('gmodel')+')':'')+'. The AI replied: '+r.text.trim().slice(0,40)+'. You can go back and open any topic.')}
+  try{const r=await llm('Reply with the single word OK.',{max:1024});if(!r.text.trim())setMsg('The key works but the model returned no text. Tap Save and test again.');else setMsg('Connected'+(prov==='gemini'?' (model '+ls.get('gmodel')+')':'')+'. The AI replied: '+r.text.trim().slice(0,40)+'. You can go back and open any topic.')}
   catch(e){setMsg('Not working yet: '+(e&&e.message||'unknown error'))}}
 async function explain(){
   const s=nav[nav.length-1],c=byId[s.id],t=c.topics[s.i],whole=s.p<0,name=whole?t.t:t.subs[s.p],btn=document.getElementById('go');
@@ -521,11 +523,11 @@ async function explain(){
   if(!SM){setSt('Add your API key first: tap the gear button at the top, paste the key and tap Save and test. The syllabus points still work.');return}
   btn.disabled=true;setSt('Writing the explanation and building the 3D animation. This takes up to a minute.');
   ac=new AbortController();const sig=ac.signal;let last=0,j2,bad='';
-  const fail=(e,w)=>{if(sig.aborted||(e&&e.name==='AbortError'))return;const k=e&&e.code;bad=k==='not_granted'?'Permission was not granted, so the '+w+' could not be written.':k==='rate_limited'?'Too many requests, wait a minute and try again.':'The '+w+' could not be finished'+(e&&e.message?': '+String(e.message).slice(0,220):'.')};
+  const fail=(e,w)=>{if(sig.aborted||(e&&e.name==='AbortError'))return;const k=e&&e.code;bad=k==='not_granted'?'Permission was not granted, so the '+w+' could not be written.':'The '+w+' could not be finished'+(e&&e.message?': '+String(e.message).slice(0,220):'.')};
   const hd=hand(c,t,s.p);if(hd)anim(hd);const start2=()=>{if(!j2&&!hd)j2=SM(aprompt(c,t,name,whole),{signal:sig,cache:false}).then(r=>{if(sig.aborted)return;const code=r.text.replace(/^\s*```(?:javascript|js)?\s*/i,'').replace(/```\s*$/,'');anim(code);ls.set(akey(s),code)}).catch(e=>fail(e,'3D animation'))};
   try{
     const r=await SM(eprompt(c,t,name,whole),{signal:sig,cache:false,onText:({text})=>{start2();const n=Date.now();if(n-last>500){last=n;show(text)}}});
-    if(!sig.aborted){show(r.text);ls.set(ekey(s),r.text)}
+    if(!sig.aborted){show(r.text);if(!r.text.trim())bad='The AI returned an empty answer. Tap the button to try again.';else if(r.truncated)bad='The answer was cut off by the model length limit, so it was not saved. Tap the button again.';else ls.set(ekey(s),r.text)}
   }catch(e){fail(e,'explanation');if(e&&e.text)show(e.text)}
   start2();await j2;
   if(sig.aborted)return;
