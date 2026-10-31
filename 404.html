@@ -5,14 +5,14 @@
 <meta name="description" content="Bs physics">
 <link rel="canonical" href="https://awaisuddin633-del.github.io/bs-physics/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="BS Physics">
+<meta property="og:title" content="bs-physics-study-guide-standalone-2">
 <meta property="og:description" content="Bs physics">
 <meta property="og:url" content="https://awaisuddin633-del.github.io/bs-physics/">
 <meta name="twitter:card" content="summary">
 <meta name="google-site-verification" content="Bs physics">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>BS Physics</title>
+<title>bs-physics-study-guide-standalone-2</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&family=Noto+Nastaliq+Urdu:wght@400;600&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
 <style>
 :root{--bg:#EEF3F6;--bar:#EEF3F6;--card:#fff;--ink:#16263A;--mute:#586A7D;--line:#D0DCE5;--acc:#0B6E8A;--on:#fff;--hi:#E9A913;--grid:rgba(22,38,58,.06);
@@ -107,7 +107,7 @@ function vHome(){
   return `<h1>BS Physics</h1><p class="lead">University of Balochistan, Fall 2026 syllabus: ${SEMS.length} semesters, ${ALL.length} subjects, ${tp} topics. Choose a semester, then a subject, then a topic.</p>
   <input id="q" type="search" placeholder="Search any topic, for example Lagrangian" aria-label="Search topics"><div id="res"></div>
   ${hub()}<div class="tiles">${SEMS.map(s=>`<button class="tile" data-a="sem" data-n="${s.n}"><span class="num">${s.n}</span><span class="lab">${ORD[s.n]} semester</span><span class="sub">${s.courses.length} subjects</span></button>`).join('')}</div>
-  <p class="foot">Topics come straight from your university syllabus. Explanations and 3D animations are written by the AI model you choose in Settings when you open a point, so check formulas against your textbook before an exam. Build 2.1</p>`}
+  <p class="foot">Topics come straight from your university syllabus. Explanations and 3D animations are written by the AI model you choose in Settings when you open a point, so check formulas against your textbook before an exam. Build 2.3</p>`}
 function vSem(n){
   const s=SEMS[n-1];let g='',h='';
   s.courses.forEach(c=>{if((c.group||'')!==g){g=c.group||'';if(g)h+=`<h3 class="sec">${esc(g)}</h3>`}h+=courseRow(c)});
@@ -464,44 +464,77 @@ async function makePdf(){
   finally{btn.disabled=false}}
 const CFG=()=>{try{return JSON.parse(ls.get('cfg')||'null')}catch(e){return null}};
 const GB='https://generativelanguage.googleapis.com',sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let NOSTREAM=false;
 const friendly=(st,m)=>{m=String(m||'').slice(0,200);
   if(st===400&&/api key/i.test(m))return 'This API key is not valid. Copy it again from aistudio.google.com/apikey (Gemini keys start with AIza).';
   if(st===401)return 'The API key was rejected. Copy it again and save.';
   if(st===403)return 'The provider refused this key (403): '+m;
+  if(st===404)return 'The AI model was not found for this key (404). Tap Save and test again to pick another model.';
   if(st===429)return 'The free limit is reached for now'+(m?' ('+m.replace(/\s+/g,' ').slice(0,140)+')':'')+'. Wait a minute and try again. If it says "per day" or "limit: 0", try again tomorrow or use another key.';
   if(st>=500)return 'The AI service is busy right now. Try again in a moment.';
   return st+': '+m};
-async function gModel(key,force){
-  const c=ls.get('gmodel');if(c&&!force)return c;let best=null;
-  try{const res=await fetch(GB+'/v1beta/models?pageSize=200',{headers:{'x-goog-api-key':key}});
-    if(res.ok){const j=await res.json(),ver=n=>+((n.match(/gemini-(\d+(?:\.\d+)?)/)||[0,0])[1]);
+async function tfetch(url,init,ms,sig){
+  const ac2=new AbortController();let to=false;
+  const t=setTimeout(()=>{to=true;ac2.abort()},ms),fwd=()=>ac2.abort();
+  if(sig){if(sig.aborted)fwd();else sig.addEventListener('abort',fwd,{once:true})}
+  try{return await fetch(url,Object.assign({},init,{signal:ac2.signal}))}
+  catch(e){if(to)throw Object.assign(new Error('timeout'),{code:'timeout'});throw e}
+  finally{clearTimeout(t)}}
+async function gModel(key,force,sig,st){
+  const c=ls.get('gmodel');if(c&&!force)return c;let best=null;if(st)st('Finding a Gemini model…');
+  for(const q of ['pageSize=200&fields=models(name,supportedGenerationMethods)','pageSize=200']){
+    try{const res=await tfetch(GB+'/v1beta/models?'+q,{headers:{'x-goog-api-key':key}},15000,sig);
+      if(!res.ok)continue;
+      const j=await res.json(),ver=n=>+((n.match(/gemini-(\d+(?:\.\d+)?)/)||[0,0])[1]);
       const L=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).indexOf('generateContent')>=0).map(m=>m.name.replace('models/','')).filter(n=>/flash/.test(n)&&!/lite|image|tts|live|audio|embed|exp|vision|8b|robotics|computer|thinking/.test(n));
-      const st=L.filter(n=>!/preview|latest/.test(n)),pool=st.length?st:L;pool.sort((a,b)=>ver(b)-ver(a)||a.length-b.length);best=pool[0]||null}}catch(e){}
+      const sv=L.filter(n=>!/preview|latest/.test(n)),pool=sv.length?sv:L;pool.sort((a,b)=>ver(b)-ver(a)||a.length-b.length);best=pool[0]||null;if(best)break}
+    catch(e){if(e&&e.name==='AbortError')throw e;break}}
   best=best||'gemini-flash-latest';ls.set('gmodel',best);return best}
 const emit=(o,text)=>{try{o.onText&&o.onText({text})}catch(e){}};
+const stallErr=(sec,got,text)=>Object.assign(new Error('No data came back from the AI for '+sec+' seconds. Check your internet and try again.'),{code:'stalled',got:got,text:text});
+const parseG=(j,o)=>{if(j.promptFeedback&&j.promptFeedback.blockReason)throw new Error('The request was blocked: '+j.promptFeedback.blockReason);const cd=j.candidates&&j.candidates[0];if(!cd)return{tx:'',trunc:false};return{tx:((cd.content&&cd.content.parts)||[]).filter(p=>p.text&&!p.thought).map(p=>p.text).join(''),trunc:cd.finishReason==='MAX_TOKENS'}};
 async function consume(res,G,o){
-  let buf='',text='',trunc=false;
+  let buf='',text='',trunc=false,got=false;
   const feed=ln=>{if(ln.indexOf('data:')!==0)return;const d=ln.slice(5).trim();if(!d||d==='[DONE]')return;let j;try{j=JSON.parse(d)}catch(e){return}
-    if(G){if(j.promptFeedback&&j.promptFeedback.blockReason)throw new Error('The request was blocked: '+j.promptFeedback.blockReason);const cd=j.candidates&&j.candidates[0];
-      if(cd){const tx=((cd.content&&cd.content.parts)||[]).filter(p=>p.text&&!p.thought).map(p=>p.text).join('');if(tx){text+=tx;emit(o,text)}if(cd.finishReason==='MAX_TOKENS')trunc=true}}
+    if(G){const p=parseG(j);if(p.tx){text+=p.tx;emit(o,text)}if(p.trunc)trunc=true}
     else{if(j.type==='content_block_delta'&&j.delta&&j.delta.text){text+=j.delta.text;emit(o,text)}else if(j.type==='message_delta'&&j.delta&&j.delta.stop_reason==='max_tokens')trunc=true;else if(j.type==='error')throw new Error((j.error&&j.error.message)||'Stream error')}};
   if(!res.body){(await res.text()).split('\n').forEach(feed);return{text,truncated:trunc}}
-  const rd=res.body.getReader(),dec=new TextDecoder();
-  for(;;){const r=await rd.read();if(r.done)break;buf+=dec.decode(r.value,{stream:true});const L=buf.split('\n');buf=L.pop();L.forEach(feed)}
+  const rd=res.body.getReader(),dec=new TextDecoder(),F=o.first||90000,S=o.stall||60000;
+  for(;;){
+    const ms=got?S:F;let tm,r;
+    try{r=await Promise.race([rd.read(),new Promise((_,rej)=>{tm=setTimeout(()=>rej(stallErr(Math.round(ms/1000),got,text)),ms)})])}
+    catch(e){try{rd.cancel()}catch(x){}throw e}
+    finally{clearTimeout(tm)}
+    if(r.done)break;got=true;buf+=dec.decode(r.value,{stream:true});const L=buf.split('\n');buf=L.pop();L.forEach(feed)}
   if(buf)feed(buf);return{text,truncated:trunc}}
+async function consumeJson(res,G,o){
+  const ms=o.first||120000;let tm;
+  const j=await Promise.race([res.json(),new Promise((_,rej)=>{tm=setTimeout(()=>rej(stallErr(Math.round(ms/1000),false,'')),ms)})]).finally(()=>clearTimeout(tm));
+  let text='',trunc=false;
+  if(G){const p=parseG(j);text=p.tx;trunc=p.trunc}
+  else{text=(j.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');trunc=j.stop_reason==='max_tokens'}
+  if(text)emit(o,text);return{text,truncated:trunc}}
 async function llm(prompt,o){o=o||{};const c=CFG();if(!c||!c.key)throw Object.assign(new Error('No API key saved'),{code:'no_key'});
-  const G=c.prov!=='anthropic',key=c.key,mt=o.max;
+  const G=c.prov!=='anthropic',key=c.key,mt=o.max,st=o.status||(()=>{}),who=G?'Google':'Anthropic';let ns=NOSTREAM;
   for(let at=0;at<4;at++){
     let url,init;
-    if(G){const m=await gModel(key),cap=/gemini-(?:2\.5|[3-9])/.test(m)?32768:8192;url=GB+'/v1beta/models/'+encodeURIComponent(m)+':streamGenerateContent?alt=sse';
+    if(G){const m=await gModel(key,false,o.signal,st),cap=/gemini-(?:2\.5|[3-9])/.test(m)?32768:8192;url=GB+'/v1beta/models/'+encodeURIComponent(m)+(ns?':generateContent':':streamGenerateContent?alt=sse');
       init={headers:{'content-type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:mt?Math.min(mt,cap):cap}})}}
-    else{url='https://api.anthropic.com/v1/messages';init={headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-5-5',max_tokens:mt||16000,stream:true,messages:[{role:'user',content:prompt}]})}}
-    let res;try{res=await fetch(url,Object.assign({method:'POST',signal:o.signal},init))}
-    catch(e){if(e&&e.name==='AbortError')throw e;throw Object.assign(new Error('Could not reach '+(G?'Google':'Anthropic')+'. Check your internet, and open this file in Chrome, not inside another app.'),{code:'network'})}
-    if(res.ok)return consume(res,G,o);
+    else{url='https://api.anthropic.com/v1/messages';init={headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-5-5',max_tokens:mt||16000,stream:!ns,messages:[{role:'user',content:prompt}]})}}
+    const HT=o.timeout||(ns?180000:90000);st('Waiting for '+who+(ns?'':' (streaming)')+'…');
+    let res;
+    try{res=await tfetch(url,Object.assign({method:'POST'},init),HT,o.signal)}
+    catch(e){if(e&&e.name==='AbortError')throw e;
+      if(e&&e.code==='timeout')throw Object.assign(new Error('No reply from '+who+' within '+Math.round(HT/1000)+' seconds. Your internet may be slow or blocked here. Try again, or switch between Wi-Fi and mobile data.'),{code:'timeout'});
+      const em=String(e&&e.message||e);
+      if(/ISO-8859-1|non-ASCII|not a valid HTTP header|Invalid value/i.test(em))throw Object.assign(new Error('The API key contains a character that browsers do not allow, so nothing was sent. Delete the key, paste it again and tap Save and test. (Tap Show key to check it.)'),{code:'badkey_chars'});
+      throw Object.assign(new Error('The phone could not connect to '+who+' ('+em.slice(0,80)+'). Tap Check connection in Settings to see exactly where it fails.'),{code:'network'})}
+    if(res.ok){
+      try{return ns?await consumeJson(res,G,o):await consume(res,G,o)}
+      catch(e){if(e&&e.code==='stalled'&&!e.got&&!ns){ns=true;NOSTREAM=true;st('Streaming looks blocked on this network. Switching to normal mode…');continue}throw e}}
     let t2='';try{t2=await res.text()}catch(e){}let msg=t2;try{const j=JSON.parse(t2);msg=(j.error&&(j.error.message||j.error))||j.message||t2}catch(e){}
-    if(G&&at<2&&(res.status===404||(res.status===400&&/model/i.test(String(msg))&&!/api key/i.test(String(msg))))){const bad=ls.get('gmodel'),nm=await gModel(key,true);if(nm===bad)ls.set('gmodel','gemini-flash-latest');continue}
-    if(at<2&&[429,500,502,503,504].indexOf(res.status)>=0){await sleep(at?7000:3000);continue}
+    if(G&&at<2&&(res.status===404||(res.status===400&&/model/i.test(String(msg))&&!/api key/i.test(String(msg))))){const bad=ls.get('gmodel'),nm=await gModel(key,true,o.signal,st);if(nm===bad)ls.set('gmodel','gemini-flash-latest');continue}
+    if(at<2&&[429,500,502,503,504].indexOf(res.status)>=0){st('The service is busy, retrying…');await sleep(at?7000:3000);continue}
     throw Object.assign(new Error(friendly(res.status,msg)),{code:res.status===429?'rate_limited':'http_'+res.status})}}
 window.claude={use:async n=>n==='sample'?(CFG()&&CFG().key?llm:null):n==='downloads'?{save:async o=>{const u=URL.createObjectURL(o.data),a=document.createElement('a');a.href=u;a.download=o.filename;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},5000)}}:null};
 function vSet(){const c=CFG()||{prov:'gemini',key:''};
@@ -509,19 +542,48 @@ function vSet(){const c=CFG()||{prov:'gemini',key:''};
   <label class="fld">Model<select id="prov"><option value="gemini"${c.prov!=='anthropic'?' selected':''}>Google Gemini</option><option value="anthropic"${c.prov==='anthropic'?' selected':''}>Claude (Anthropic)</option></select></label>
   <label class="fld">API key<input id="k_key" type="password" value="${esc(c.key)}" placeholder="AIza…" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
   <label class="msg"><input type="checkbox" id="showk"> Show key</label>
-  <div class="ctl"><button class="go" data-a="savekey">Save and test</button></div>
-  ${STORE_OK?'':'<p class="msg">Warning: this browser view blocks saved storage, so your key and notes are lost when you close the page. Open the app from your https link (for example GitHub Pages) in Chrome.</p>'}<p class="msg" id="setmsg">Free Gemini key: aistudio.google.com/apikey</p>`}
+  <div class="ctl"><button class="go" data-a="savekey">Save and test</button><button class="ghost" data-a="netcheck">Check connection</button></div>
+  ${/^(content|file):$/.test(location.protocol)?'<p class="msg">You opened this app as a file from your phone. Chrome may block saving and some network calls in this mode. Your https link (GitHub Pages) works best.</p>':''}${STORE_OK?'':'<p class="msg">Warning: this browser view blocks saved storage, so your key and notes are lost when you close the page. Open the app from your https link (for example GitHub Pages) in Chrome.</p>'}<p class="msg" id="setmsg">Free Gemini key: aistudio.google.com/apikey</p><pre id="netres" class="msg" style="white-space:pre-wrap;font-family:inherit"></pre>`}
 const setMsg=m=>{const e=document.getElementById('setmsg');if(e)e.textContent=m};
-async function saveCfg(){const key=document.getElementById('k_key').value.replace(/[\s"'`]/g,''),prov=document.getElementById('prov').value;
+async function saveCfg(){const inp=document.getElementById('k_key'),raw=inp.value,prov=document.getElementById('prov').value,key=raw.replace(/[^\x21-\x7E]/g,'').replace(/["'`]/g,'');
   if(!key){setMsg('Paste your API key first.');return}
-  ls.set('cfg',JSON.stringify({prov,key}));ls.set('gmodel','');SM=null;setMsg('Saved. Testing the connection…');
-  try{const r=await llm('Reply with the single word OK.',{max:1024});if(!r.text.trim())setMsg('The key works but the model returned no text. Tap Save and test again.');else setMsg('Connected'+(prov==='gemini'?' (model '+ls.get('gmodel')+')':'')+'. The AI replied: '+r.text.trim().slice(0,40)+'. You can go back and open any topic.')}
-  catch(e){setMsg('Not working yet: '+(e&&e.message||'unknown error'))}}
+  inp.value=key;let pre='';
+  if(raw.length!==key.length)pre+='Removed '+(raw.length-key.length)+' hidden or invalid character(s) from the key. ';
+  if(prov==='gemini'&&!/^AIza[0-9A-Za-z_-]{35}$/.test(key))pre+='Note: a Gemini key normally starts with AIza and has 39 characters; yours has '+key.length+'. ';
+  const prev=CFG();ls.set('cfg',JSON.stringify({prov,key}));if(!prev||prev.key!==key||prev.prov!==prov)ls.set('gmodel','');
+  SM=null;NOSTREAM=false;
+  const btn=document.querySelector('[data-a="savekey"]'),t0=Date.now();let step='Starting…';
+  if(btn)btn.disabled=true;
+  const tick=()=>setMsg(pre+'Testing the connection… '+Math.round((Date.now()-t0)/1000)+'s. '+step);tick();const iv=setInterval(tick,1000);
+  try{const r=await llm('Reply with the single word OK.',{max:1024,timeout:40000,first:40000,stall:40000,status:s=>{step=s}});
+    if(!r.text.trim())setMsg(pre+'The key works but the model returned no text. Tap Save and test again.');
+    else setMsg(pre+'Connected'+(prov==='gemini'?' (model '+ls.get('gmodel')+')':'')+'. The AI replied: '+r.text.trim().slice(0,40)+'. You can go back and open any topic.')}
+  catch(e){setMsg(pre+'Not working yet: '+(e&&e.message||'unknown error'))}
+  finally{clearInterval(iv);if(btn)btn.disabled=false}}
+async function netcheck(){
+  const out=document.getElementById('netres'),btn=document.querySelector('[data-a="netcheck"]');if(!out)return;
+  const c=CFG(),k=(c&&c.key)||'',L=[],add=s=>{L.push(s);out.textContent=L.join('\n')};
+  if(btn)btn.disabled=true;out.textContent='Checking…';
+  const why=e=>e&&e.code==='timeout'?'no answer in 15 seconds':String(e&&e.message||e).slice(0,80);
+  try{
+    add('Opened as: '+location.protocol+(/^(content|file):$/.test(location.protocol)?' (a file on this phone; your https link works best)':''));
+    add('Saved storage: '+(STORE_OK?'works':'blocked in this view'));
+    add('Phone says: '+(navigator.onLine===false?'offline':'online'));
+    add('Key: '+(k?k.length+' characters, '+(/^AIza/.test(k)?'starts with AIza':'does not start with AIza')+(/[^\x21-\x7E]/.test(k)?', HAS INVALID CHARACTERS':', clean'):'none saved yet. Paste it above and tap Save and test.'));
+    let t=Date.now();
+    try{await tfetch(GB+'/',{mode:'no-cors'},15000);add('Reach Google: OK ('+(Date.now()-t)+' ms)')}
+    catch(e){add('Reach Google: FAILED ('+why(e)+')');add('=> This phone cannot reach Google from this browser. Switch between Wi-Fi and mobile data, and turn off VPN, Private DNS and Data Saver.');return}
+    if(!k)return;
+    t=Date.now();
+    try{const r=await tfetch(GB+'/v1beta/models?pageSize=1',{headers:{'x-goog-api-key':k}},15000);add('Key check: HTTP '+r.status+' ('+(Date.now()-t)+' ms)');
+      add(r.ok?'=> Connection and key are fine.':[400,401,403].indexOf(r.status)>=0?'=> Google is reached but rejects this key. Create a new key at aistudio.google.com/apikey.':'=> Google answered with an error. Try again in a minute.')}
+    catch(e){const em=String(e&&e.message||e);add('Key check: FAILED ('+why(e)+')');add(/ISO-8859-1|non-ASCII|header/i.test(em)?'=> The key has an invalid character. Paste it again.':'=> Google is reachable, but this page is blocked from calling it. Open the app from your https link (GitHub Pages) in Chrome instead of from a file.')}
+  }finally{if(btn)btn.disabled=false}}
 async function explain(){
   const s=nav[nav.length-1],c=byId[s.id],t=c.topics[s.i],whole=s.p<0,name=whole?t.t:t.subs[s.p],btn=document.getElementById('go');
   if(!SM){try{SM=window.claude?await window.claude.use('sample'):null}catch(e){SM=null}}
   if(!SM){setSt('Add your API key first: tap the gear button at the top, paste the key and tap Save and test. The syllabus points still work.');return}
-  btn.disabled=true;setSt('Writing the explanation and building the 3D animation. This takes up to a minute.');
+  btn.disabled=true;const t0=Date.now(),iv=setInterval(()=>setSt('Writing the explanation and building the 3D animation… '+Math.round((Date.now()-t0)/1000)+'s. This can take a minute.'),1000);setSt('Writing the explanation and building the 3D animation… This can take a minute.');
   ac=new AbortController();const sig=ac.signal;let last=0,j2,bad='';
   const fail=(e,w)=>{if(sig.aborted||(e&&e.name==='AbortError'))return;const k=e&&e.code;bad=k==='not_granted'?'Permission was not granted, so the '+w+' could not be written.':'The '+w+' could not be finished'+(e&&e.message?': '+String(e.message).slice(0,220):'.')};
   const hd=hand(c,t,s.p);if(hd)anim(hd);const start2=()=>{if(!j2&&!hd)j2=SM(aprompt(c,t,name,whole),{signal:sig,cache:false}).then(r=>{if(sig.aborted)return;const code=r.text.replace(/^\s*```(?:javascript|js)?\s*/i,'').replace(/```\s*$/,'');anim(code);ls.set(akey(s),code)}).catch(e=>fail(e,'3D animation'))};
@@ -530,7 +592,7 @@ async function explain(){
     if(!sig.aborted){show(r.text);if(!r.text.trim())bad='The AI returned an empty answer. Tap the button to try again.';else if(r.truncated)bad='The answer was cut off by the model length limit, so it was not saved. Tap the button again.';else ls.set(ekey(s),r.text)}
   }catch(e){fail(e,'explanation');if(e&&e.text)show(e.text)}
   start2();await j2;
-  if(sig.aborted)return;
+  clearInterval(iv);if(sig.aborted)return;
   setSt(bad||'Done. Saved on this device. Tap the button again to rewrite it.');btn.disabled=false;
 }
 document.addEventListener('click',e=>{
@@ -543,6 +605,7 @@ document.addEventListener('click',e=>{
   else if(a==='lang'){lang=b.dataset.l;ls.set('lang',lang);draw()}
   else if(a==='settings')go({v:'set'});
   else if(a==='savekey')saveCfg();
+  else if(a==='netcheck')netcheck();
   else if(a==='explain')explain();
   else if(a==='quiz')quiz();
   else if(a==='pdf')makePdf();
